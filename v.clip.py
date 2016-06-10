@@ -35,6 +35,11 @@
 #% label: Name of output vector map
 #%end
 
+#%flag
+#% key: d
+#% description: dissolve
+#%end
+
 # DOTAZY
 # ma byt vstup pouze pro jednu vrstvu, nebo pro vic?
 # ma byt vystupem nova vrstva, nebo clipla stara vrstva?
@@ -78,8 +83,9 @@ def clip(input_data, clip_data, out_data):
   
 
 if __name__ == "__main__":
-    opt, flg = parser()
-    #mapset=grass.gisenv()['MAPSET'] 
+    opt, flg = parser() 
     main()
+    
+  
 
 
