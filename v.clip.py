@@ -37,10 +37,16 @@
 
 #%flag
 #% key: d
-#% description: dissolve
+#% description: Dissolve clip map
+#%end
+
+#%flag
+#% key: r
+#% description: Clip by region
 #%end
 
 # TODO - nepridava se vysledna mapa do seznamu vrstev
+# TODO - nemuze byt zaroven -d a -r
 
 # TODO - co z tohohle muzu smazat?
 from grass.script import run_command, message, percent, parser
@@ -54,12 +60,13 @@ def main():
     input_map  = opt['input']
     clip_map   = opt['clip']
     output_map = opt['output']
+    
     flag_dissolve = flg['d']
+    flag_region   = flg['r']
     
-    global tmp
-    
+  
     # ---- clip with dissolve ---- #
-    # TODO jak ma fungovat dissolve? nespojuje hranice (Martin opravi)
+    # TODO - Martin - dissolve without input column
     if (flag_dissolve):
         grass.message("Flag - dissolve")
 
@@ -67,39 +74,56 @@ def main():
         temp_clip_map = '%s_%s' % ("temp", str(os.getpid()))
         
         # dissolve clip_map
-        # TODO - Martin - dissolve without input column
         grass.run_command('v.dissolve', input = clip_map, output = temp_clip_map)
         grass.message(temp_clip_map)
         
-        try:
-            grass.message("before clipping")
-            clip(input_map, temp_clip_map, output_map)
-            grass.message("after clipping")
-        except  CalledModuleError as e:
-            grass.fatal(_("Clipping steps failed."
-                        " Check above error messages and"
-                        " see following details:\n%s") % e)
+        # perform clipping
+        clip(input_map, temp_clip_map, output_map)
         
         # delete temporary file
         grass.run_command('g.remove', flags='f', type='vector', name=temp_clip_map)
     
     
-    # ---- clip without flags ---- #
+     # ---- clip by region ---- #
+     # TODO - disable clip layer option?
+    if (flag_region):
+        grass.message("Flag - region")
+        
+        # setup temporary file
+        temp_region_map = '%s_%s' % ("temp", str(os.getpid()))
+        
+        # create a map covering current computational region
+        grass.run_command('v.in.region', output = temp_region_map)
+        grass.message(temp_region_map)
+        
+        # perform clipping
+        clip(input_map, temp_region_map, output_map)
+        
+        # delete temporary file
+        grass.run_command('g.remove', flags='f', type='vector', name=temp_region_map)
+       
+    
+    
+    # ---- dissolve clippingn map ---- #
     else: 
         grass.message("No flag")
-        try:
-            clip(input_map, clip_map, output_map)
-        except  CalledModuleError as e:
-            grass.fatal(_("Clipping steps failed."
-                        " Check above error messages and"
-                        " see following details:\n%s") % e)
+
+        # perform clippings
+        clip(input_map, clip_map, output_map)
     
         # write cmd history:
         grass.vector_history(output_map)
     
 def clip(input_data, clip_data, out_data):
-    grass.run_command('v.overlay', ainput = input_data, binput = clip_data, operator = 'and', output = out_data, olayer = '0,1,0')
-  
+    try:
+        grass.message("before clipping")
+        grass.run_command('v.overlay', ainput = input_data, binput = clip_data, operator = 'and', output = out_data, olayer = '0,1,0')
+        grass.message("after clipping")
+    except  CalledModuleError as e:
+        grass.fatal(_("Clipping steps failed."
+                    " Check above error messages and"
+                    " see following details:\n%s") % e)
+
 
 if __name__ == "__main__":
     opt, flg = parser() 
