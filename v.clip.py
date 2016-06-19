@@ -20,7 +20,7 @@
 #% keyword: 
 #%end
 
-#%option G_OPT_V_INPUTS
+#%option G_OPT_V_INPUT
 #% key: input
 #% label: Name of vector map to be clipped
 #%end
@@ -40,14 +40,7 @@
 #% description: dissolve
 #%end
 
-# DOTAZY
-# ma byt vstup pouze pro jednu vrstvu, nebo pro vic?
-# ma byt vystupem nova vrstva, nebo clipla stara vrstva?
-# error - input layer - AREA, LINIE, ne POINT (to nedava smysl)
-# error - clip layer - AREA, ne POINT, LINE (to dava smysl)
-
-# TODO - podpora pouze linie plochy, ne mix s body, pouze body =>select
-# body + dissolve =>ignorovat dissolve, select+overlap
+# TODO - nepridava se vysledna mapa do seznamu vrstev
 
 # TODO - co z tohohle muzu smazat?
 from grass.script import run_command, message, percent, parser
@@ -61,22 +54,48 @@ def main():
     input_map  = opt['input']
     clip_map   = opt['clip']
     output_map = opt['output']
-   
-    # do maps exist?
-    if not grass.find_file(input_map, element='vector')['file']:
-        grass.fatal(_("Vector map <%s> not found") % input_map)
-    elif not grass.find_file(clip_map, element='vector')['file']:
-        grass.fatal(_("Vector map <%s> not found") % clip_map)
-    else:
-        # TODO - layer numbers?
+    flag_dissolve = flg['d']
+    
+    global tmp
+    
+    # ---- clip with dissolve ---- #
+    # TODO jak ma fungovat dissolve? nespojuje hranice (Martin opravi)
+    if (flag_dissolve):
+        grass.message("Flag - dissolve")
+
+        # setup temporary file
+        temp_clip_map = '%s_%s' % ("temp", str(os.getpid()))
+        
+        # dissolve clip_map
+        # TODO - Martin - dissolve without input column
+        grass.run_command('v.dissolve', input = clip_map, output = temp_clip_map)
+        grass.message(temp_clip_map)
+        
+        try:
+            grass.message("before clipping")
+            clip(input_map, temp_clip_map, output_map)
+            grass.message("after clipping")
+        except  CalledModuleError as e:
+            grass.fatal(_("Clipping steps failed."
+                        " Check above error messages and"
+                        " see following details:\n%s") % e)
+        
+        # delete temporary file
+        grass.run_command('g.remove', flags='f', type='vector', name=temp_clip_map)
+    
+    
+    # ---- clip without flags ---- #
+    else: 
+        grass.message("No flag")
         try:
             clip(input_map, clip_map, output_map)
         except  CalledModuleError as e:
             grass.fatal(_("Clipping steps failed."
-                          " Check above error messages and"
-                          " see following details:\n%s") % e)
-    # write cmd history:
-    grass.vector_history(output)
+                        " Check above error messages and"
+                        " see following details:\n%s") % e)
+    
+        # write cmd history:
+        grass.vector_history(output_map)
     
 def clip(input_data, clip_data, out_data):
     grass.run_command('v.overlay', ainput = input_data, binput = clip_data, operator = 'and', output = out_data, olayer = '0,1,0')
