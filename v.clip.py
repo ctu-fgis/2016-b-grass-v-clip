@@ -17,11 +17,9 @@
 #% keyword: vector
 #% keyword: clip
 #% keyword: area
-#% keyword: 
 #%end
 
 #%option G_OPT_V_INPUT
-#% key: input
 #% label: Name of vector map to be clipped
 #%end
 
@@ -31,8 +29,6 @@
 #%end
 
 #%option G_OPT_V_OUTPUT
-#% key: output
-#% label: Name of output vector map
 #%end
 
 #%flag
@@ -43,17 +39,27 @@
 #%flag
 #% key: r
 #% description: Clip by region
+#% suppress_required: yes
 #%end
 
 # TODO - nepridava se vysledna mapa do seznamu vrstev
 # TODO - nemuze byt zaroven -d a -r => igonorovat -d pokud -r
-# TODO - chyby pri spusteni - nekdy, po opakovanem spusteni bez chyby
+### -> https://grass.osgeo.org/grass73/manuals/g.parser.html
+# TODO - chyby pri spusteni - nekdy, po opakovanem spusteni bez chyby (?)
 # TODO - jak zachazet s temp mapou
 
-from grass.script import run_command, message, parser
 import os
+import atexit
+
+from grass.script import run_command, message, parser
 import grass.script as grass
 from grass.exceptions import CalledModuleError
+
+TMP = []
+
+def cleanup():
+    for name in TMP:
+        grass.run_command('g.remove', flags='f', type='vector', name=name)
 
 def main():
     input_map  = opt['input']
@@ -66,10 +72,11 @@ def main():
     # ======================================== #
     # ========== INPUT MAP TOPOLOGY ========== #
     # ======================================== #
-    lines_count = grass.vector_info_topo(input_map)['lines']
-    points_count = grass.vector_info_topo(input_map)['points']
-    areas_count = grass.vector_info_topo(input_map)['areas']
-    grass.message("There are {0} lines, {1} points and {2} areas".format(lines_count, points_count, areas_count))
+    vinfo = grass.vector_info_topo(input_map)
+    lines_count = vinfo['lines']
+    points_count = vinfo['points']
+    areas_count = vinfo['areas']
+    grass.debug("There are {0} lines, {1} points and {2} areas".format(lines_count, points_count, areas_count), 1)
     
     # ==== only points ==== #
     if (points_count > 0 and lines_count == 0 and areas_count == 0):
@@ -78,20 +85,7 @@ def main():
         # ========== CLIP BY REGION ========== #
         # ==================================== #
         if (flag_region):
-            grass.message("Clipping by region.")
-                    
-            # setup temporary map
-            temp_region_map = '%s_%s' % ("temp", str(os.getpid()))
-            
-            # create a map covering current computational region
-            grass.run_command('v.in.region', output = temp_region_map)
-            
-            # perform clipping
-            clip_s(input_map, temp_region_map, output_map)
-            
-            # delete temporary map
-            grass.run_command('g.remove', flags='f', type='vector', name=temp_region_map)
-            
+            clip_r(input_map, output_map, clip_s)
 
         # ================================= #
         # ========== NORMAL CLIP ========== #
@@ -112,19 +106,7 @@ def main():
         # ==================================== #
         # TODO - disable clip layer option?
         if (flag_region):
-            grass.message("Clip by region.")
-            
-            # setup temporary file
-            temp_region_map = '%s_%s' % ("temp", str(os.getpid()))
-            
-            # create a map covering current computational region
-            grass.run_command('v.in.region', output = temp_region_map)
-            
-            # perform clipping
-            clip_o(input_map, temp_region_map, output_map)
-            
-            # delete temporary file
-            grass.run_command('g.remove', flags='f', type='vector', name=temp_region_map)
+            clip_r(input_map, output_map, clip_o)
         
         # ======================================== #
         # ========== CLIP WITH DISSOLVE ========== #
@@ -154,7 +136,19 @@ def main():
             # perform clippings
             clip_o(input_map, clip_map, output_map)
         
-        
+def clip_r(input_map, output_map, clip_fn):
+    grass.message("Clipping by region.")
+
+    # setup temporary map
+    temp_region_map = '%s_%s' % ("temp", str(os.getpid()))
+    TMP.append(temp_region_map)
+
+    # create a map covering current computational region
+    grass.run_command('v.in.region', output = temp_region_map)
+
+    # perform clipping
+    clip_fn(input_map, temp_region_map, output_map)
+
         
 def clip_o(input_data, clip_data, out_data):
     try:
@@ -176,7 +170,8 @@ def clip_s(input_data, clip_data, out_data):
                     " see following details:\n%s") % e)
 
 if __name__ == "__main__":
-    opt, flg = parser() 
+    atexit.register(cleanup)
+    opt, flg = parser()
     main()
     
   
