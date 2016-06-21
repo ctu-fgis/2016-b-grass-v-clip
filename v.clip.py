@@ -13,7 +13,7 @@
 #############################################################################
 
 #%module
-#% description: Extracts features of input map(s) which overlay features of clip map.
+#% description: Extracts features of input map which overlay features of clip map.
 #% keyword: vector
 #% keyword: clip
 #% keyword: area
