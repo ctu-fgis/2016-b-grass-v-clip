@@ -1,0 +1,107 @@
+v.clip --overwrite input=Polygon_test@PERMANENT output=temp3 -r                 
+Clipping by region.
+Vytvářím topologii pro vektorovou vrstvu <temp_2784@PERMANENT>...
+Registrace primitiv...
+2 primitives registered
+6 vertices registered
+Vytváření ploch...
+One area built
+One isle built
+Přidávání ostrovů...
+Připojování centroidů...
+Počet uzlů: 1
+Počet primitiv: 2
+Počet bodů: 0
+Počet linií: 0
+Počet hranic: 1
+Počet centroidů: 1
+Počet ploch: 1
+Počet ostrovů: 1
+WARNING: Vektorová mapa <temp3> již existuje a bude přepsána.
+Copying vector features from <Polygon_test@PERMANENT>...
+Copying vector features from <temp_2784@PERMANENT>...
+Snapping boundaries with 1e-008 ...
+Rozbíjím linie ...
+Odstraňuji duplicitní centroidy ...
+Čistím hranice v uzlech...
+Merging lines...
+Přidávám ostrovy...
+Vytváření ploch...
+10 areas built
+2 isles built
+Přidávání ostrovů...
+Počet uzlů: 13
+Počet primitiv: 24
+Počet bodů: 0
+Počet linií: 0
+Počet hranic: 24
+Počet centroidů: 0
+Počet ploch: 10
+Počet ostrovů: 2
+Dotazuji vektorovou mapu <Polygon_test@PERMANENT>...
+Dotazuji vektorovou mapu <temp_2784@PERMANENT>...
+Zapisuji centroidy ...
+Vytvářím topologii pro vektorovou vrstvu <temp3@PERMANENT>...
+Registrace primitiv...
+13 primitives registered
+35 vertices registered
+Vytváření ploch...
+4 areas built
+3 isles built
+Přidávání ostrovů...
+Připojování centroidů...
+Počet uzlů: 8
+Počet primitiv: 13
+Počet bodů: 0
+Počet linií: 0
+Počet hranic: 9
+Počet centroidů: 4
+Počet ploch: 4
+Počet ostrovů: 3
+v.overlay hotovo.
+Removing vector <temp_2784>
+WARNING: Nelze smazat soubor <C:\Users\Zofie\Dropbox\vs\Mgr\4. term\YFSG\GRASS/SJTSK/PERMANENT/vector/temp_2784/sidx>
+WARNING: Unable to delete vector map
+WARNING: <temp_2784> nothing removed
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "C:\OSGEO4~1\apps\Python27\lib\atexit.py", line 24,
+in _run_exitfuncs
+    func(*targs, **kargs)
+  File "C:\Users\Zofie\Documents\GitHub\2016-b-grass-v-clip\
+v.clip.py", line 64, in cleanup
+    grass.run_command('g.remove', flags='f', type='vector',
+name=name)
+  File "C:\OSGEO4~1\apps\grass\grass-7.0.4\etc\python\grass\
+script\core.py", line 395, in run_command
+    return handle_errors(returncode, returncode, args,
+kwargs)
+  File "C:\OSGEO4~1\apps\grass\grass-7.0.4\etc\python\grass\
+script\core.py", line 313, in handle_errors
+    returncode=returncode)
+CalledModuleError: Module run None ['g.remove', '-f',
+'type=vector', 'name=temp_2784'] ended with error
+Process ended with non-zero return code 1. See errors in the
+(error) output.
+Error in sys.exitfunc:
+Traceback (most recent call last):
+  File "C:\OSGEO4~1\apps\Python27\lib\atexit.py", line 24,
+in _run_exitfuncs
+    func(*targs, **kargs)
+  File "C:\Users\Zofie\Documents\GitHub\2016-b-grass-v-clip\
+v.clip.py", line 64, in cleanup
+    grass.run_command('g.remove', flags='f', type='vector',
+name=name)
+  File "C:\OSGEO4~1\apps\grass\grass-7.0.4\etc\python\grass\
+script\core.py", line 395, in run_command
+    return handle_errors(returncode, returncode, args,
+kwargs)
+  File "C:\OSGEO4~1\apps\grass\grass-7.0.4\etc\python\grass\
+script\core.py", line 313, in handle_errors
+    returncode=returncode)
+grass.exceptions.CalledModuleError: Module run None
+['g.remove', '-f', 'type=vector', 'name=temp_2784'] ended
+with error
+Process ended with non-zero return code 1. See errors in the
+(error) output.
+(Fri Jun 24 10:03:29 2016) Příkaz ukončen (1 sec)      
