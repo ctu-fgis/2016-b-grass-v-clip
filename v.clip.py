@@ -21,6 +21,7 @@
 
 #%option G_OPT_V_INPUT
 #% label: Name of vector map to be clipped
+#% key: input
 #%end
 
 #%option G_OPT_V_INPUT
@@ -29,11 +30,12 @@
 #%end
 
 #%option G_OPT_V_OUTPUT
+#% key: output
 #%end
 
 #%flag
 #% key: d
-#% description: Dissolve clip map
+#% description: Do not dissolve clip map
 #%end
 
 #%flag
@@ -42,11 +44,23 @@
 #% suppress_required: yes
 #%end
 
+# flags -d and -r are mutualy exclusive
+# with flag -r, suppress_required: yes, but input and output must be defined
+#%rules
+#% exclusive: -d, -r
+#% requires_all: -r, input, output 
+#%end
+
+
+
 # TODO - nepridava se vysledna mapa do seznamu vrstev
-# TODO - nemuze byt zaroven -d a -r => igonorovat -d pokud -r
-### -> https://grass.osgeo.org/grass73/manuals/g.parser.html
+# TODO - Martin - dissolve without input column
 # TODO - chyby pri spusteni - nekdy, po opakovanem spusteni bez chyby (?)
-# TODO - jak zachazet s temp mapou
+# TODO - pokud neexistuje prekryv clip layer a input layer 
+        # Module run None ['v.overlay', 'binput=temp_6072', 'operator=and', 
+        # 'olayer=0,1,0', 'ainput=Promblem_test@PERMANENT', 'output=temp4'] ended with error
+        # Process ended with non-zero return code 1. See errors in the (error) output.
+    # -> jak mam rozlisit tuhle vyjimku od jinych vyjimek?
 
 import os
 import atexit
@@ -59,7 +73,14 @@ TMP = []
 
 def cleanup():
     for name in TMP:
-        grass.run_command('g.remove', flags='f', type='vector', name=name)
+        try:
+            grass.run_command('g.remove', flags='f', type='vector', name=name)
+            
+        except CalledModuleError as e:
+            grass.fatal(_("Deleting of temporary layer failed."
+                        " Check above error messages and"
+                        " see following details:\n%s") % e)
+        
 
 def main():
     input_map  = opt['input']
@@ -73,71 +94,65 @@ def main():
     # ========== INPUT MAP TOPOLOGY ========== #
     # ======================================== #
     vinfo = grass.vector_info_topo(input_map)
-    lines_count = vinfo['lines']
-    points_count = vinfo['points']
-    areas_count = vinfo['areas']
-    grass.debug("There are {0} lines, {1} points and {2} areas".format(lines_count, points_count, areas_count), 1)
+    grass.debug("There are {0} lines, {1} points and {2} areas".format(vinfo['lines'], vinfo['points'], vinfo['areas']), 1)
     
     # ==== only points ==== #
-    if (points_count > 0 and lines_count == 0 and areas_count == 0):
+    if (vinfo['points'] > 0 and vinfo['lines'] == 0 and vinfo['areas'] == 0):
         
         # ==================================== #
         # ========== CLIP BY REGION ========== #
         # ==================================== #
         if (flag_region):
-            clip_r(input_map, output_map, clip_s)
+            clip_by_region(input_map, output_map, clip_select)
 
-        # ================================= #
-        # ========== NORMAL CLIP ========== #
-        # ================================= #
+        # ================================== #
+        # ========== DEFAULT CLIP ========== #
+        # ================================== #
         else:
-            grass.message("Clipping by clip map.")
+            grass.message("CLIPPING.")
             # perform clipping
-            clip_s(input_map, clip_map, output_map)
+            clip_select(input_map, clip_map, output_map)
                 
     # ==== lines, areas, lines + areas ==== #
     # ==== points + areas, points + lines, points + areas + lines ==== #
     else:
-        if (points_count > 0):
+        if (vinfo['points'] > 0):
             grass.warning("Input map contains multiple geometry, only lines and areas will be clipped.")
     
         # ==================================== #
         # ========== CLIP BY REGION ========== #
         # ==================================== #
-        # TODO - disable clip layer option?
         if (flag_region):
-            clip_r(input_map, output_map, clip_o)
+            clip_by_region(input_map, output_map, clip_overlay)
         
-        # ======================================== #
-        # ========== CLIP WITH DISSOLVE ========== #
-        # ======================================== #
-        # TODO - Martin - dissolve without input column
+        # ===================================================== #
+        # ========== CLIP WITHOUT DISSOLVED CLIP MAP ========== #
+        # ===================================================== #
         elif (flag_dissolve):
-            grass.message("Clipping by dissolved clip map.")
+            grass.message("CLIPPING WITHOUT DISSOLVED CLIP MAP.")
+            clip_overlay(input_map, clip_map, output_map)
+            
+        # ========================================================== #
+        # ========== DEFAULT CLIP WITH DISSOLVED CLIP MAP ========== #
+        # ========================================================== #
+        else: 
+            grass.message("DEFAULT CLIPPING WITH DISSOLVED CLIP MAP.")
 
-            # setup temporary file
+            # setup temporary map
             temp_clip_map = '%s_%s' % ("temp", str(os.getpid()))
+            TMP.append(temp_clip_map)
             
             # dissolve clip_map
             grass.run_command('v.dissolve', input = clip_map, output = temp_clip_map)
             
             # perform clipping
-            clip_o(input_map, temp_clip_map, output_map)
-            
-            # delete temporary file
-            grass.run_command('g.remove', flags='f', type='vector', name=temp_clip_map)
-        
-        # ================================= #
-        # ========== NORMAL CLIP ========== #
-        # ================================= #
-        else: 
-            grass.message("Clipping by clip map.")
+            clip_overlay(input_map, temp_clip_map, output_map)
 
-            # perform clippings
-            clip_o(input_map, clip_map, output_map)
-        
-def clip_r(input_map, output_map, clip_fn):
-    grass.message("Clipping by region.")
+
+# clip input map by computational region
+# clip_select for points, clip_overlay for areas and lines
+def clip_by_region(input_map, output_map, clip_fn):
+    grass.message("CLIPPING BY REGION.")
 
     # setup temporary map
     temp_region_map = '%s_%s' % ("temp", str(os.getpid()))
@@ -150,17 +165,16 @@ def clip_r(input_map, output_map, clip_fn):
     clip_fn(input_map, temp_region_map, output_map)
 
         
-def clip_o(input_data, clip_data, out_data):
+def clip_overlay(input_data, clip_data, out_data):
     try:
         grass.run_command('v.overlay', ainput = input_data, binput = clip_data, operator = 'and', output = out_data, olayer = '0,1,0')
-
     except  CalledModuleError as e:
         grass.fatal(_("Clipping steps failed."
                     " Check above error messages and"
                     " see following details:\n%s") % e)
                     
                     
-def clip_s(input_data, clip_data, out_data):
+def clip_select(input_data, clip_data, out_data):
     try:
         grass.run_command('v.select', ainput = input_data, binput = clip_data, output = out_data, operator = 'overlap')
     
