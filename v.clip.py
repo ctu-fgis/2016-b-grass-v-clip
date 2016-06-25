@@ -61,8 +61,10 @@
         # 'olayer=0,1,0', 'ainput=Promblem_test@PERMANENT', 'output=temp4'] ended with error
         # Process ended with non-zero return code 1. See errors in the (error) output.
     # -> jak mam rozlisit tuhle vyjimku od jinych vyjimek?
+## ML: vyreseno na urovni v.overlay: https://trac.osgeo.org/grass/changeset/68764
 
 import os
+import sys
 import atexit
 
 from grass.script import run_command, message, parser
@@ -74,7 +76,7 @@ TMP = []
 def cleanup():
     for name in TMP:
         try:
-            grass.run_command('g.remove', flags='f', type='vector', name=name)
+            grass.run_command('g.remove', flags='f', type='vector', name=name, quiet=True)
             
         except CalledModuleError as e:
             grass.fatal(_("Deleting of temporary layer failed."
@@ -152,6 +154,15 @@ def main():
             clip_overlay(input_map, temp_clip_map, output_map)
 
 
+    # ======================================== #
+    # ========== OUTPUT MAP TOPOLOGY========== #
+    # ======================================== #
+    vinfo = grass.vector_info_topo(output_map)
+    if vinfo['primitives'] == 0:
+        grass.warning("Output map is empty.")
+
+    return 0
+
 # clip input map by computational region
 # clip_select for points, clip_overlay for areas and lines
 def clip_by_region(input_map, output_map, clip_fn):
@@ -189,7 +200,7 @@ def clip_select(input_data, clip_data, out_data):
 if __name__ == "__main__":
     atexit.register(cleanup)
     opt, flg = parser()
-    main()
+    sys.exit(main())
     
   
 
