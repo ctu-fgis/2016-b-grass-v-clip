@@ -41,7 +41,6 @@
 #%flag
 #% key: r
 #% description: Clip by region
-#% suppress_required: yes
 #%end
 
 # flags -d and -r are mutualy exclusive
