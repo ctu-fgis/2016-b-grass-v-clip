@@ -41,6 +41,7 @@
 #%flag
 #% key: r
 #% description: Clip by region
+#% suppress_required: yes
 #%end
 
 # flags -d and -r are mutualy exclusive
@@ -81,6 +82,9 @@ def cleanup():
                         " see following details:\n%s") % e)
         
 
+def section_message(msg):
+    grass.message('{delim}\n{msg}\n{delim}'.format(msg=msg, delim='-'*80))
+
 def main():
     input_map  = opt['input']
     clip_map   = opt['clip']
@@ -108,7 +112,7 @@ def main():
         # ========== DEFAULT CLIP ========== #
         # ================================== #
         else:
-            grass.message("CLIPPING.")
+            section_message("Clipping.")
             # perform clipping
             clip_select(input_map, clip_map, output_map)
                 
@@ -128,14 +132,14 @@ def main():
         # ========== CLIP WITHOUT DISSOLVED CLIP MAP ========== #
         # ===================================================== #
         elif (flag_dissolve):
-            grass.message("CLIPPING WITHOUT DISSOLVED CLIP MAP.")
+            section_message("Clipping without dissolved clip map.")
             clip_overlay(input_map, clip_map, output_map)
             
         # ========================================================== #
         # ========== DEFAULT CLIP WITH DISSOLVED CLIP MAP ========== #
         # ========================================================== #
         else: 
-            grass.message("DEFAULT CLIPPING WITH DISSOLVED CLIP MAP.")
+            section_message("Default clipping with dissolved clip map.")
 
             # setup temporary map
             temp_clip_map = '%s_%s' % ("temp", str(os.getpid()))
@@ -151,7 +155,7 @@ def main():
 # clip input map by computational region
 # clip_select for points, clip_overlay for areas and lines
 def clip_by_region(input_map, output_map, clip_fn):
-    grass.message("CLIPPING BY REGION.")
+    section_message("Clipping by region.")
 
     # setup temporary map
     temp_region_map = '%s_%s' % ("temp", str(os.getpid()))
