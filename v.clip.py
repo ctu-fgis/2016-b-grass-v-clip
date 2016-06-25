@@ -55,8 +55,12 @@
 
 
 # TODO - nepridava se vysledna mapa do seznamu vrstev
+## ML: po instalaci modulu pres g.extension vse funguje (vystupni mapa
+## se prida to seznamu vrstev), jinymi slovy nedari se mi problem zreprodukovat
 # TODO - Martin - dissolve without input column
+## ML: vyresim pozdeji
 # TODO - chyby pri spusteni - nekdy, po opakovanem spusteni bez chyby (?)
+## ML: to vypada na problem pod Windows (podivam se na to pozdeji)
 # TODO - pokud neexistuje prekryv clip layer a input layer 
         # Module run None ['v.overlay', 'binput=temp_6072', 'operator=and', 
         # 'olayer=0,1,0', 'ainput=Promblem_test@PERMANENT', 'output=temp4'] ended with error
