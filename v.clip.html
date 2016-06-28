@@ -1,16 +1,40 @@
 <h2>DESCRIPTION</h2>
 
-TODO
+<em>v.clip</em> module enables extracting those features of input vector map, which overlay features of clip map, as well as their storing in a new vector map.
+ 
+	<p>In default, boundaries of clip map are dissolved before clipping. Alternatively, flag <em> -d </em> can be ticked to retain the boundaries of clip map. Flag <em> -r </em> facilitates clipping by current computational region.
+
+	<p>It is possible to clip vector maps consisting of points, lines, polygons or combinations of these. However, the current version does not fully support clipping of mixed geometry containing points. In such a case, the output map will only store clipped lines and/or polygons. 
+
+<h2>NOTES</h2>
+<em>v.clip</em> is a front-end to <em>v.overlay</em>, as well as <em>v.select</em>. Clipping of polygons and/or lines can be achieved using <em>v.overlay</em>. Clipping of points can be performed with <em>v.select</em>.
 
 <h2>EXAMPLES</h2>
 
-TODO
+<h3>Basic use</h3>
+	<div class="code"><pre>
+	v.clip input = input_vector_map clip = clip_vector_map output = output_map_name
+	</pre></div>
+
+<h3>Retain boundaries of clip map</h3>
+	<div class="code"><pre>
+	v.clip input = input_vector_map clip = clip_vector_map output = output_map_name -d
+	</pre></div>
+
+<h3>Clip by current computational region</h3>
+It is not obligatory to enter name of clip map. In case it is stated, the clip map will be omitted.
+	<div class="code"><pre>
+	v.clip input = input_vector_map output = output_map_name -r
+	</pre></div>
+
 
 <h2>SEE ALSO</h2>
 
 <em>
   <a href="v.overlay.html">v.overlay</a>,
-  <a href="v.select.html">v.select</a>
+  <a href="v.select.html">v.select</a>, 
+  <a href="v.dissolve.html">v.dissolve</a>
+  <a href="v.in.region.html">v.in.region</a>
 </em>
 
 <h2>AUTHOR</h2>
@@ -18,5 +42,5 @@ TODO
 Zofie Cimburova, Czech Technical University in Prague
 
 <p>
-<i>Last changed: $Date$</i>
+<i>Last changed: $Date: 2016-06-28 19:30:00 +0001 (Tue, 28 Jun 2016)$</i>
   
