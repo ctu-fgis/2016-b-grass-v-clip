@@ -27,25 +27,40 @@ with <em><a href="v.select.html">v.select<a></em>.
 <h2>EXAMPLES</h2>
 
 <h3>Basic use</h3>
+Clip railroads by counties Wake and Johnston in North Carolina (Nort Carolina data set).
 
 <div class="code"><pre>
-v.clip input=input_vector_map clip=clip_vector_map output=output_map_name
+v.extract input=boundary_county@PERMANENT where=NAME='WAKE' OR NAME='JOHNSTON' output=county_WAKE_JOHNSTON
+v.clip input=railroads@PERMANENT clip=county_WAKE_JOHNSTON@PERMANENT output=railroads_WAKE_JOHNSTON
 </pre></div>
+
+<center>
+ <img src="v_clip.gif" alt="v.clip example" height="300" width="300" ><br>
+ <em>Figure: v.clip example - basic use</em>
+</center>
+
 
 <h3>Retain boundaries of clip map</h3>
 
 <div class="code"><pre>
-v.clip -d input=input_vector_map clip=clip_vector_map output=output_map_name
+v.clip -d input=railroads@PERMANENT clip=county_WAKE_JOHNSTON@PERMANENT output=railroads_WAKE_JOHNSTON
 </pre></div>
 
 <h3>Clip by current computational region</h3>
+Clip hospitals by computational region adjusted to counties Wake and Johnston in North Carolina (Nort Carolina data set).
 
 It is not obligatory to enter name of clip map. In case it is stated,
 the clip map will be omitted.
 
 <div class="code"><pre>
-v.clip -r input=input_vector_map output=output_map_name
+v.extract input=boundary_county@PERMANENT where=NAME='WAKE' OR NAME='JOHNSTON' output=county_WAKE_JOHNSTON
+v.clip -r input=hospitals@PERMANENT output=hospitals_clip
 </pre></div>
+
+<center>
+ <img src="v_clip_r.gif" alt="v.clip example" height="300" width="300" ><br>
+ <em>Figure: v.clip example - clip by computational region</em>
+</center>
 
 <h2>SEE ALSO</h2>
 
