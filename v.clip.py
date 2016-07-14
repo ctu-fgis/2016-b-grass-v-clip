@@ -76,7 +76,7 @@ def cleanup():
 
 
 def section_message(msg):
-    grass.message('{delim}\n{msg}\n{delim}'.format(msg=msg, delim='-'*80))
+    grass.message('{delim}\n{msg}\n{delim}'.format(msg=msg, delim='-' * 80))
 
 
 def main():
